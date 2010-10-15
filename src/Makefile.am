@@ -19,5 +19,5 @@ kal_SOURCES = \
    util.h\
    version.h
 
-kal_CXXFLAGS = $(FFTW3_CFLAGS) $(USRP_CFLAGS)
-kal_LDADD = $(FFTW3_LIBS) $(USRP_LIBS)
+kal_CXXFLAGS = $(FFTW3_CFLAGS) $(UHD_CFLAGS)
+kal_LDADD = $(FFTW3_LIBS) $(UHD_LIBS)
