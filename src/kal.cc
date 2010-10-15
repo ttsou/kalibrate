@@ -84,6 +84,7 @@ void usage(char *prog) {
 	printf("\t-A\tantenna TX/RX (0) or RX2 (1), defaults to RX2\n");
 	printf("\t-g\tgain as %% of range, defaults to 45%%\n");
 	printf("\t-F\tFPGA master clock frequency, defaults to 52MHz\n");
+	printf("\t-x\tenable external 10MHz reference input\n");
 	printf("\t-v\tverbose\n");
 	printf("\t-D\tenable debug messages\n");
 	printf("\t-h\thelp\n");
@@ -95,13 +96,14 @@ int main(int argc, char **argv) {
 
 	char *endptr;
 	int c, antenna = 1, bi = BI_NOT_DEFINED, chan = -1, bts_scan = 0;
-	unsigned int subdev = 1, decimation = 192;
-	long int fpga_master_clock_freq = 52000000;
+	unsigned int subdev = 1;
+	long int fpga_master_clock_freq = 100000000;
+	bool external_ref = false;
 	float gain = 0.45;
 	double freq = -1.0, fd;
 	usrp_source *u;
 
-	while((c = getopt(argc, argv, "f:c:s:b:R:A:g:F:vDh?")) != EOF) {
+	while((c = getopt(argc, argv, "f:c:s:b:R:A:g:F:xvDh?")) != EOF) {
 		switch(c) {
 			case 'f':
 				freq = strtod(optarg, 0);
@@ -181,6 +183,10 @@ int main(int argc, char **argv) {
 				}
 				break;
 
+			case 'x':
+				external_ref = true;
+				break;
+
 			case 'v':
 				g_verbosity++;
 				break;
@@ -227,22 +233,19 @@ int main(int argc, char **argv) {
 		usage(argv[0]);
 	}
 
-	// calculate decimation -- get as close to GSM rate as we can
-	fd = (double)fpga_master_clock_freq / GSM_RATE;
-	decimation = (unsigned int)fd;
-
 	if(g_debug) {
 #ifdef D_HOST_OSX
 		printf("debug: Mac OS X version\n");
 #endif
 		printf("debug: FPGA Master Clock Freq:\t%li\n", fpga_master_clock_freq);
-		printf("debug: decimation            :\t%u\n", decimation);
+		printf("debug: External Reference    :\t%s\n", external_ref? "Yes" : "No");
 		printf("debug: RX Subdev Spec        :\t%s\n", subdev? "B" : "A");
 		printf("debug: Antenna               :\t%s\n", antenna? "RX2" : "TX/RX");
 		printf("debug: Gain                  :\t%f\n", gain);
 	}
 
-	u = new usrp_source(decimation, fpga_master_clock_freq);
+	// let the device decide on the decimation
+	u = new usrp_source(GSM_RATE, fpga_master_clock_freq, external_ref);
 	if(!u) {
 		fprintf(stderr, "error: usrp_source\n");
 		return -1;

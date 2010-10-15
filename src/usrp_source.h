@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <usrp/usrp_standard.h>
+#include <uhd/usrp/single_usrp.hpp>
 
 #include "usrp_complex.h"
 #include "circular_buffer.h"
@@ -33,15 +33,22 @@
 
 class usrp_source {
 public:
-	usrp_source(float sample_rate, long int fpga_master_clock_freq = 52000000);
-	usrp_source(unsigned int decimation, long int fpga_master_clock_freq = 52000000);
+	usrp_source(float sample_rate,
+		long int fpga_master_clock_freq = 100000000,
+		bool external_ref = false);
+
 	~usrp_source();
 
 	int open(unsigned int subdev);
-	int read(complex *buf, unsigned int num_samples, unsigned int *samples_read);
+	int read(complex *buf,
+		unsigned int num_samples,
+		unsigned int *samples_read);
+
 	int fill(unsigned int num_samples, unsigned int *overrun);
 	int tune(double freq);
-	bool set_antenna(int antenna);
+	void set_antenna(int antenna);
+	void set_antenna(const std::string antenna);
+	std::vector<std::string> get_antennas();
 	bool set_gain(float gain);
 	void start();
 	void stop();
@@ -50,36 +57,24 @@ public:
 
 	float sample_rate();
 
-	static const unsigned int side_A = 0;
-	static const unsigned int side_B = 1;
-
 private:
-	void calculate_decimation();
+	uhd::usrp::single_usrp::sptr	m_dev;
 
-	usrp_standard_rx_sptr	m_u_rx;
-	db_base_sptr		m_db_rx;
+	float				m_sample_rate;
+	float				m_desired_sample_rate;
+	bool				m_external_ref;
+	unsigned int			m_recv_samples_per_packet;
+	long int			m_fpga_master_clock_freq;
 
-	float			m_sample_rate;
-	float			m_desired_sample_rate;
-	unsigned int		m_decimation;
-
-	long int		m_fpga_master_clock_freq;
-
-	circular_buffer *	m_cb;
+	circular_buffer *		m_cb;
 
 	/*
 	 * This mutex protects access to the USRP and daughterboards but not
 	 * necessarily to any fields in this class.
 	 */
-	pthread_mutex_t		m_u_mutex;
+	pthread_mutex_t			m_u_mutex;
 
 	static const unsigned int	FLUSH_COUNT	= 10;
 	static const unsigned int	CB_LEN		= (1 << 20);
 	static const int		NCHAN		= 1;
-	static const int		INITIAL_MUX	= -1;
-	static const int		FUSB_BLOCK_SIZE	= 1024;
-	static const int		FUSB_NBLOCKS	= 16 * 8;
-	static const char *		FPGA_FILENAME() {
-		return "std_2rxhb_2tx.rbf";
-	}
 };
