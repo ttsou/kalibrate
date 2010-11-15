@@ -2,79 +2,94 @@
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-	<title>ttsou/kalibrate-uhd @ GitHub</title>
-	
-	<style type="text/css">
-		body {
-  		margin-top: 1.0em;
-  		background-color: #ffffff;
-		  font-family: "Helvetica,Arial,FreeSans";
-  		color: #000000;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-		h1 { font-size: 3.8em; color: #000000; margin-bottom: 3px; }
-		h1 .small { font-size: 0.4em; }
-		h1 a { text-decoration: none }
-		h2 { font-size: 1.5em; color: #000000; }
-    h3 { text-align: center; color: #000000; }
-    a { color: #000000; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-		pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-	</style>
-	
-</head>
+  <head>
+    <title>UHD device support for kalibrate GSM clock offset calculator</title>
+  </head>
+  <body>
+<p>
+<h3>UHD device support for kalibrate GSM clock offset calculator</h3>
+<pre>
+Main project site and general instructions:
+<a href="http://thre.at/kalibrate">http://thre.at/kalibrate</a>
 
-<body>
-  <a href="http://github.com/ttsou/kalibrate-uhd"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+Universal Hardware Driver (UHD):
+<a href="http://ettus-apps.sourcerepo.com/redmine/ettus/projects/uhd/wiki">http://ettus-apps.sourcerepo.com/redmine/ettus/projects/uhd/wiki</a>
 
-  <div id="container">
+OpenBTS Clock Wiki:
+<a href="http://gnuradio.org/redmine/wiki/1/OpenBTSClocks">http://gnuradio.org/redmine/wiki/1/OpenBTSClocks</a>
+</pre>
 
-    <div class="download">
-      <a href="http://github.com/ttsou/kalibrate-uhd/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/ttsou/kalibrate-uhd/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
+<h4>Release Notes</h4>
+<pre>
+*The USRP2 is clocked at 100MHz and does not output fractional sample rates.
+*There is no overrun checking.
+*Only the USRP2 is tested at this time.
+</pre>
 
-    <h1><a href="http://github.com/ttsou/kalibrate-uhd">kalibrate-uhd</a>
-      <span class="small">by <a href="http://github.com/ttsou">ttsou</a></span></h1>
+<h4>Download</h4>
+<pre>
+Clone with Git:
+git clone git://github.com/ttsou/kalibrate-uhd.git
+git clone http://github.com/ttsou/kalibrate-uhd.git
 
-    <div class="description">
-      UHD device support for kalibrate GSM clock offset calculator
-    </div>
+Tarball:
+<a href="http://github.com/ttsou/kalibrate-uhd/tarball/master">http://github.com/ttsou/kalibrate-uhd/tarball/master</a>
 
-    <h2>Authors</h2>
-<p>Thomas Tsou (ttsou@vt.edu)<br/><br/>      </p>
-<h2>Contact</h2>
-<p>Thomas Tsou (ttsou@vt.edu)<br/>      </p>
+GitHub:
+<a href="http://github.com/ttsou/kalibrate-uhd">http://github.com/ttsou/kalibrate-uhd</a>
+</pre>
+
+<h4>Build</h4>
+<pre>
+./bootstrap
+./configure
+make
+</pre>
+
+<h4>Examples</h4>
+<pre>
+USRP2 with internal reference:
+
+(uhd) [ttsou@fischer src]$ ./kal -f 1941.6e6
+linux; GNU C++ version 4.4.4 20100630 (Red Hat 4.4.4-10); Boost_104100; UHD_20101116.195923.c5043c6
+
+Current recv sock buff size: 50000000 bytes
+
+Warning:
+    The hardware does not support the requested RX sample rate:
+    Target sample rate: 0.270833 MSps
+    Actual sample rate: 0.271739 MSps
+
+kal: Calculating clock frequency offset.
+Using PCS-1900 channel 569 (1941.6MHz)
+average         [min, max]      (range, stddev)
++ 22.221kHz     [21574, 22791]  (1217, 352.328674)
+overruns: 0
+not found: 0
 
 
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/ttsou/kalibrate-uhd/zipball/master">zip</a> or
-      <a href="http://github.com/ttsou/kalibrate-uhd/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/ttsou/kalibrate-uhd</pre>
-    </p>
 
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/ttsou/kalibrate-uhd">ttsou/kalibrate-uhd</a>
-    </div>
+USRP2 with external 10MHz reference - Agilent E4438C (OCXO):
 
-  </div>
+(uhd) [ttsou@fischer src]$ ./kal -f 1941.6e6 -x
+linux; GNU C++ version 4.4.4 20100630 (Red Hat 4.4.4-10); Boost_104100; UHD_20101116.195923.c5043c6
 
-  
-</body>
+Current recv sock buff size: 50000000 bytes
+
+Warning:
+    The hardware does not support the requested RX sample rate:
+    Target sample rate: 0.270833 MSps
+    Actual sample rate: 0.271739 MSps
+
+kal: Calculating clock frequency offset.
+Using PCS-1900 channel 569 (1941.6MHz)
+average         [min, max]      (range, stddev)
++  13Hz         [-32, 86]       (118, 34.811478)
+overruns: 0
+not found: 0
+</pre>
+</p>
+  </body>
+
 </html>
