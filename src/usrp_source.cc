@@ -128,7 +128,7 @@ std::vector<std::string> usrp_source::get_antennas() {
 bool usrp_source::set_gain(float gain) {
 
 	uhd::gain_range_t gain_range = m_dev->get_rx_gain_range();
-	float min = gain_range.min, max = gain_range.max;
+	float min = gain_range.start(), max = gain_range.stop();
 
 	if((gain < 0.0) || (1.0 < gain))
 		return false;
