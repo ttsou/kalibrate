@@ -34,6 +34,7 @@
 #include <pthread.h>
 #include <math.h>
 #include <complex>
+#include <iostream>
 
 #include "usrp_source.h"
 
@@ -67,7 +68,7 @@ void usrp_source::stop() {
 
 	pthread_mutex_lock(&m_u_mutex);
 	if(m_dev) {
-		uhd::stream_cmd_t cmd = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
+		uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS);
 		m_dev->issue_stream_cmd(cmd);
 	}
 	pthread_mutex_unlock(&m_u_mutex);
@@ -78,7 +79,7 @@ void usrp_source::start() {
 
 	pthread_mutex_lock(&m_u_mutex);
 	if(m_dev) {
-		uhd::stream_cmd_t cmd =	uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS;
+		uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
 		m_dev->issue_stream_cmd(cmd);
 	}
 	pthread_mutex_unlock(&m_u_mutex);
@@ -181,8 +182,39 @@ int usrp_source::open(unsigned int subdev) {
 	return 0;
 }
 
+std::string handle_rx_err(uhd::rx_metadata_t metadata, unsigned int *overrun) {
 
-int usrp_source::fill(unsigned int num_samples, unsigned int *overrun_i) {
+	*overrun = false;
+	std::ostringstream ost("error: ");
+
+	switch (metadata.error_code) {
+	case uhd::rx_metadata_t::ERROR_CODE_NONE:
+		ost << "no error";
+		break;
+	case uhd::rx_metadata_t::ERROR_CODE_TIMEOUT:
+		ost << "no packet received, implementation timed-out";
+		break;
+	case uhd::rx_metadata_t::ERROR_CODE_LATE_COMMAND:
+		ost << "a stream command was issued in the past";
+		break;
+	case uhd::rx_metadata_t::ERROR_CODE_BROKEN_CHAIN:
+		ost << "expected another stream command";
+		break;
+	case uhd::rx_metadata_t::ERROR_CODE_OVERFLOW:
+		*overrun = true;
+		ost << "an internal receive buffer has filled";
+		break;
+	case uhd::rx_metadata_t::ERROR_CODE_BAD_PACKET:
+		ost << "the packet could not be parsed";
+		break;
+	default:
+		ost << "unknown error " << metadata.error_code;
+	}
+
+	return ost.str();
+}
+
+int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 
 	unsigned char ubuf[m_recv_samples_per_packet * 2 * sizeof(short)];
 	short *s = (short *)ubuf;
@@ -203,8 +235,11 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun_i) {
 		pthread_mutex_unlock(&m_u_mutex);
 
 		if (samples_read < m_recv_samples_per_packet) {
-			fprintf(stderr, "error: device::recv\n");
-			return -1;
+			std::string err_str = handle_rx_err(metadata, overrun);
+			if (!*overrun) {
+				fprintf(stderr, err_str.c_str());
+				return -1;
+			}
 		}
 
 		// write complex<short> input to complex<float> output
@@ -220,7 +255,6 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun_i) {
 
 		// update cb
 		m_cb->wrote(i);
-
 	}
 
 	// if the cb is full, we left behind data from the usb packet
