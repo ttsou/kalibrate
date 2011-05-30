@@ -93,13 +93,14 @@ float usrp_source::sample_rate() {
 
 int usrp_source::tune(double freq) {
 
-	uhd::tune_result_t tr;
+	double actual_freq;
 
 	pthread_mutex_lock(&m_u_mutex);
-	tr = m_dev->set_rx_freq(freq);
+	m_dev->set_rx_freq(freq);
+	actual_freq = m_dev->get_rx_freq();
 	pthread_mutex_unlock(&m_u_mutex);
 
-	return tr.actual_inter_freq + tr.actual_dsp_freq;
+	return actual_freq;
 }
 
 
