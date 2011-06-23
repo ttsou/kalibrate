@@ -182,9 +182,9 @@ int usrp_source::open(unsigned int subdev) {
 	return 0;
 }
 
-std::string handle_rx_err(uhd::rx_metadata_t metadata, unsigned int *overrun) {
+std::string handle_rx_err(uhd::rx_metadata_t metadata, bool &overrun) {
 
-	*overrun = false;
+	overrun = false;
 	std::ostringstream ost("error: ");
 
 	switch (metadata.error_code) {
@@ -201,7 +201,7 @@ std::string handle_rx_err(uhd::rx_metadata_t metadata, unsigned int *overrun) {
 		ost << "expected another stream command";
 		break;
 	case uhd::rx_metadata_t::ERROR_CODE_OVERFLOW:
-		*overrun = true;
+		overrun = true;
 		ost << "an internal receive buffer has filled";
 		break;
 	case uhd::rx_metadata_t::ERROR_CODE_BAD_PACKET:
@@ -218,8 +218,11 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 
 	unsigned char ubuf[m_recv_samples_per_packet * 2 * sizeof(short)];
 	short *s = (short *)ubuf;
-	unsigned int i, j, space, overruns = 0;
+	unsigned int i, j, space, overrun_cnt;
 	complex *c;
+	bool overrun_pkt;
+
+	overrun_cnt = 0;
 
 	while ((m_cb->data_available() < num_samples)
 			&& m_cb->space_available() > 0) {
@@ -235,8 +238,10 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 		pthread_mutex_unlock(&m_u_mutex);
 
 		if (samples_read < m_recv_samples_per_packet) {
-			std::string err_str = handle_rx_err(metadata, overrun);
-			if (!*overrun) {
+			std::string err_str = handle_rx_err(metadata, overrun_pkt);
+			if (overrun_pkt) {
+				overrun_cnt++;
+			} else {
 				fprintf(stderr, err_str.c_str());
 				return -1;
 			}
@@ -260,8 +265,10 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 	// if the cb is full, we left behind data from the usb packet
 	if(m_cb->space_available() == 0) {
 		fprintf(stderr, "warning: local overrun\n");
-		overruns++;
 	}
+
+	if (overrun)
+		*overrun = overrun_cnt;
 
 	return 0;
 }
