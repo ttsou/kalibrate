@@ -35,6 +35,9 @@
 #include "arfcn_freq.h"
 #include "util.h"
 
+#define STDOUTCLEAN "\r                                       " \
+		"                                       \r"
+
 extern int g_verbosity;
 
 static const float ERROR_DETECT_OFFSET_MAX = 40e3;
@@ -56,7 +59,7 @@ int c0_detect(usrp_source *u, int bi) {
 	static const double GSM_RATE = 1625000.0 / 6.0;
 	static const unsigned int NOTFOUND_MAX = 10;
 
-	int i, chan_count;
+	int i, chan_count, j;
 	unsigned int overruns, b_len, frames_len, found_count, notfound_count, r;
 	float offset, spower[BUFSIZ];
 	double freq, sps, n, power[BUFSIZ], sum = 0, a;
@@ -79,7 +82,10 @@ int c0_detect(usrp_source *u, int bi) {
 	}
 	u->start();
 	u->flush();
+	j = 0;
 	for(i = first_chan(bi); i > 0; i = next_chan(i, bi)) {
+		printf(STDOUTCLEAN "%3d of %3d, Pass 1 of 2, %2.2f%%\r", j, amount_chan(bi), (float) 100*j/amount_chan(bi));
+		fflush(stdout);
 		freq = arfcn_to_freq(i, &bi);
 		if(!u->tune(freq)) {
 			fprintf(stderr, "error: usrp_source::tune\n");
@@ -101,6 +107,7 @@ int c0_detect(usrp_source *u, int bi) {
 			fprintf(stderr, "\tchan %d (%.1fMHz):\tpower: %lf\n",
 			   i, freq / 1e6, n);
 		}
+		j++;
 	}
 
 	/*
@@ -124,14 +131,17 @@ int c0_detect(usrp_source *u, int bi) {
 	}
 
 	// then we look for fcch bursts
-	printf("%s:\n", bi_to_str(bi));
 	found_count = 0;
 	notfound_count = 0;
 	sum = 0;
 	i = first_chan(bi);
+	j = 0;
 	do {
+		printf(STDOUTCLEAN "%3d of %3d, Pass 2 of 2, %2.2f%%\r", j, amount_chan(bi), (float) 100*j/amount_chan(bi));
+		fflush(stdout);
 		if(power[i] <= a) {
 			i = next_chan(i, bi);
+			j++;
 			continue;
 		}
 
@@ -153,19 +163,23 @@ int c0_detect(usrp_source *u, int bi) {
 		r = l->scan(b, b_len, &offset, 0);
 		if(r && (fabsf(offset - GSM_RATE / 4) < ERROR_DETECT_OFFSET_MAX)) {
 			// found
-			printf("\tchan: %d (%.1fMHz ", i, freq / 1e6);
+			printf(STDOUTCLEAN "\tchan: %d (%.1fMHz ", i, freq / 1e6);
 			display_freq(offset - GSM_RATE / 4);
 			printf(")\tpower: %6.2lf\n", power[i]);
+			fflush(stdout);
 			notfound_count = 0;
 			i = next_chan(i, bi);
+			j++;
 		} else {
 			// not found
 			notfound_count += 1;
 			if(notfound_count >= NOTFOUND_MAX) {
 				notfound_count = 0;
 				i = next_chan(i, bi);
+				j++;
 			}
 		}
+
 	} while(i > 0);
 
 	return 0;

@@ -39,4 +39,5 @@ int str_to_bi(char *s);
 double arfcn_to_freq(int n, int *bi = 0);
 int freq_to_arfcn(double freq, int *bi = 0);
 int first_chan(int bi);
+int amount_chan(int bi);
 int next_chan(int chan, int bi);

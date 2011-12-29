@@ -289,3 +289,28 @@ int next_chan(int chan, int bi) {
 
 	return -1;
 }
+
+int amount_chan(int bi) {
+
+	switch(bi) {
+		case GSM_850:
+			return 252;
+
+		case GSM_900:
+			return 125;
+
+		case GSM_E_900:
+			return 176;
+
+		case DCS_1800:
+			return 374;
+
+		case PCS_1900:
+			return 299;
+
+		default:
+			return -1;
+	}
+
+	return -1;
+}
