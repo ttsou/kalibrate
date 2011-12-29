@@ -51,6 +51,7 @@
 extern int g_debug;
 
 static const char * const fftw_plan_name = ".kal_fftw_plan";
+const unsigned int fcch_detector::FFT_SIZE = 1024;
 
 
 fcch_detector::fcch_detector(const float sample_rate, const unsigned int D,

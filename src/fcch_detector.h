@@ -66,8 +66,7 @@ public:
 
 private:
 	static const double GSM_RATE = 1625000.0 / 6.0;
-	static const unsigned int FFT_SIZE = 1024;
-
+	static const unsigned int FFT_SIZE;
 	unsigned int	m_w_len,
 			m_D,
 			m_check_G,
