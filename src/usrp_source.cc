@@ -147,7 +147,7 @@ bool usrp_source::set_gain(float gain) {
 int usrp_source::open(unsigned int subdev) {
 
 	if(!m_dev) {
-		uhd::device_addr_t dev_addr("type=usrp2");
+		uhd::device_addr_t dev_addr("");
 		if (!(m_dev = uhd::usrp::multi_usrp::make(dev_addr))) {
 			fprintf(stderr, "error: multi_usrp::make: failed!\n");
 			return -1;
