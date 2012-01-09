@@ -148,8 +148,8 @@ int usrp_source::open(unsigned int subdev) {
 
 	if(!m_dev) {
 		uhd::device_addr_t dev_addr("type=usrp2");
-		if (!(m_dev = uhd::usrp::single_usrp::make(dev_addr))) {
-			fprintf(stderr, "error: single_usrp::make: failed!\n");
+		if (!(m_dev = uhd::usrp::multi_usrp::make(dev_addr))) {
+			fprintf(stderr, "error: multi_usrp::make: failed!\n");
 			return -1;
 		}
 

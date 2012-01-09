@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <uhd/usrp/single_usrp.hpp>
+#include <uhd/usrp/multi_usrp.hpp>
 
 #include "usrp_complex.h"
 #include "circular_buffer.h"
@@ -58,7 +58,7 @@ public:
 	float sample_rate();
 
 private:
-	uhd::usrp::single_usrp::sptr	m_dev;
+	uhd::usrp::multi_usrp::sptr	m_dev;
 
 	float				m_sample_rate;
 	float				m_desired_sample_rate;
