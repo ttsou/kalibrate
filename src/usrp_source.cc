@@ -153,6 +153,9 @@ int usrp_source::open(unsigned int subdev) {
 			return -1;
 		}
 
+		if (m_fpga_master_clock_freq > 0)
+			m_dev->set_master_clock_rate(m_fpga_master_clock_freq);
+
 		m_dev->set_rx_rate(m_desired_sample_rate);
 		m_sample_rate = m_dev->get_rx_rate();
 

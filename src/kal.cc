@@ -83,7 +83,7 @@ void usage(char *prog) {
 	printf("\t-R\tside A (0) or B (1), defaults to B\n");
 	printf("\t-A\tantenna TX/RX (0) or RX2 (1), defaults to RX2\n");
 	printf("\t-g\tgain as %% of range, defaults to 45%%\n");
-	printf("\t-F\tFPGA master clock frequency, defaults to 52MHz\n");
+	printf("\t-F\tFPGA master clock frequency, defaults to device default\n");
 	printf("\t-x\tenable external 10MHz reference input\n");
 	printf("\t-v\tverbose\n");
 	printf("\t-D\tenable debug messages\n");
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 	char *endptr;
 	int c, antenna = 1, bi = BI_NOT_DEFINED, chan = -1, bts_scan = 0;
 	unsigned int subdev = 1;
-	long int fpga_master_clock_freq = 100000000;
+	long int fpga_master_clock_freq = 0;
 	bool external_ref = false;
 	float gain = 0.45;
 	double freq = -1.0, fd;
@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
 	}
 
 	// sanity check clock
-	if(fpga_master_clock_freq < 48000000) {
+	if((fpga_master_clock_freq) && fpga_master_clock_freq < 48000000) {
 		fprintf(stderr, "error: FPGA master clock too slow: %li\n", fpga_master_clock_freq);
 		usage(argv[0]);
 	}
