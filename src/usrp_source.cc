@@ -165,8 +165,6 @@ int usrp_source::open(unsigned int subdev) {
 
 		if (m_external_ref)
 			clock_config.ref_source = uhd::clock_config_t::REF_SMA;
-		else
-			clock_config.ref_source = uhd::clock_config_t::REF_INT;
 
 		m_dev->set_clock_config(clock_config);
 
