@@ -159,14 +159,14 @@ int usrp_source::open(unsigned int subdev) {
 		m_dev->set_rx_rate(m_desired_sample_rate);
 		m_sample_rate = m_dev->get_rx_rate();
 
-		uhd::clock_config_t clock_config;
-		clock_config.pps_source = uhd::clock_config_t::PPS_SMA;
-		clock_config.pps_polarity = uhd::clock_config_t::PPS_NEG;
-
-		if (m_external_ref)
+		if (m_external_ref) {
+			uhd::clock_config_t clock_config;
+			clock_config.pps_source = uhd::clock_config_t::PPS_SMA;
+			clock_config.pps_polarity = uhd::clock_config_t::PPS_NEG;
 			clock_config.ref_source = uhd::clock_config_t::REF_SMA;
 
-		m_dev->set_clock_config(clock_config);
+			m_dev->set_clock_config(clock_config);
+		}
 
 		if(g_verbosity > 1) {
 			fprintf(stderr, "Sample rate: %f\n", m_sample_rate);
