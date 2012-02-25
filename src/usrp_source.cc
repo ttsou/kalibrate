@@ -147,7 +147,10 @@ bool usrp_source::set_gain(float gain) {
 int usrp_source::open(unsigned int subdev) {
 
 	if(!m_dev) {
-		uhd::device_addr_t dev_addr("");
+		char *addr = std::getenv("KAL_DEVICE");
+		if (addr==NULL)
+			addr = "";
+		uhd::device_addr_t dev_addr(addr);
 		if (!(m_dev = uhd::usrp::multi_usrp::make(dev_addr))) {
 			fprintf(stderr, "error: multi_usrp::make: failed!\n");
 			return -1;
@@ -159,14 +162,10 @@ int usrp_source::open(unsigned int subdev) {
 		m_dev->set_rx_rate(m_desired_sample_rate);
 		m_sample_rate = m_dev->get_rx_rate();
 
-		uhd::clock_config_t clock_config;
-		clock_config.pps_source = uhd::clock_config_t::PPS_SMA;
-		clock_config.pps_polarity = uhd::clock_config_t::PPS_NEG;
-
 		if (m_external_ref)
-			clock_config.ref_source = uhd::clock_config_t::REF_SMA;
-
-		m_dev->set_clock_config(clock_config);
+			m_dev->set_clock_source("external");
+		else
+			m_dev->set_clock_source("internal");
 
 		if(g_verbosity > 1) {
 			fprintf(stderr, "Sample rate: %f\n", m_sample_rate);
@@ -179,6 +178,9 @@ int usrp_source::open(unsigned int subdev) {
 
 	m_recv_samples_per_packet =
 		m_dev->get_device()->get_max_recv_samps_per_packet();
+
+	uhd::stream_args_t stream_args("sc16");
+	m_rx_stream = m_dev->get_rx_stream(stream_args);
 
 	return 0;
 }
@@ -231,10 +233,10 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 		uhd::rx_metadata_t metadata;
 
 		pthread_mutex_lock(&m_u_mutex);
-		size_t samples_read = m_dev->get_device()->recv((void*)ubuf,
+		size_t samples_read = m_rx_stream->recv((void*)ubuf,
 					m_recv_samples_per_packet,
 					metadata,
-					uhd::io_type_t::COMPLEX_INT16,
+					0.1,
 					uhd::device::RECV_MODE_ONE_PACKET);
 		pthread_mutex_unlock(&m_u_mutex);
 
