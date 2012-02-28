@@ -162,8 +162,18 @@ int usrp_source::open(unsigned int subdev) {
 		m_dev->set_rx_rate(m_desired_sample_rate);
 		m_sample_rate = m_dev->get_rx_rate();
 
-		if (m_external_ref)
+		if (m_external_ref) {
+#ifdef UHD_3_4_X
 			m_dev->set_clock_source("external");
+#else
+			uhd::clock_config_t clock_config;
+			clock_config.pps_source = uhd::clock_config_t::PPS_SMA;
+			clock_config.pps_polarity = uhd::clock_config_t::PPS_NEG;
+			clock_config.ref_source = uhd::clock_config_t::REF_SMA;
+
+			m_dev->set_clock_config(clock_config);
+#endif
+		}
 
 		if(g_verbosity > 1) {
 			fprintf(stderr, "Sample rate: %f\n", m_sample_rate);
@@ -177,8 +187,10 @@ int usrp_source::open(unsigned int subdev) {
 	m_recv_samples_per_packet =
 		m_dev->get_device()->get_max_recv_samps_per_packet();
 
+#ifdef UHD_3_4_X
 	uhd::stream_args_t stream_args("sc16");
 	m_rx_stream = m_dev->get_rx_stream(stream_args);
+#endif
 
 	return 0;
 }
@@ -231,11 +243,19 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 		uhd::rx_metadata_t metadata;
 
 		pthread_mutex_lock(&m_u_mutex);
+#ifdef UHD_3_4_X
 		size_t samples_read = m_rx_stream->recv((void*)ubuf,
 					m_recv_samples_per_packet,
 					metadata,
 					0.1,
 					uhd::device::RECV_MODE_ONE_PACKET);
+#else
+		size_t samples_read = m_dev->get_device()->recv((void*)ubuf,
+					m_recv_samples_per_packet,
+					metadata,
+					uhd::io_type_t::COMPLEX_INT16,
+					uhd::device::RECV_MODE_ONE_PACKET);
+#endif
 		pthread_mutex_unlock(&m_u_mutex);
 
 		if (samples_read < m_recv_samples_per_packet) {

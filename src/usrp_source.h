@@ -25,6 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "config.h"
+
 #include <uhd/usrp/multi_usrp.hpp>
 
 #include "usrp_complex.h"
@@ -59,7 +61,9 @@ public:
 
 private:
 	uhd::usrp::multi_usrp::sptr	m_dev;
-	uhd::rx_streamer::sptr m_rx_stream;
+#ifdef UHD_3_4_X
+	uhd::rx_streamer::sptr		m_rx_stream;
+#endif
 
 	float				m_sample_rate;
 	float				m_desired_sample_rate;
