@@ -144,7 +144,7 @@ bool usrp_source::set_gain(float gain) {
 /*
  * open() should be called before multiple threads access usrp_source.
  */
-int usrp_source::open(unsigned int subdev) {
+int usrp_source::open(char *subdev) {
 
 	if(!m_dev) {
 		char *addr = std::getenv("KAL_DEVICE");
@@ -155,6 +155,8 @@ int usrp_source::open(unsigned int subdev) {
 			fprintf(stderr, "error: multi_usrp::make: failed!\n");
 			return -1;
 		}
+
+		m_dev->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(subdev));
 
 		if (m_fpga_master_clock_freq > 0)
 			m_dev->set_master_clock_rate(m_fpga_master_clock_freq);

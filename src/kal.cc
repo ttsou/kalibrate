@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 
 	char *endptr;
 	int c, antenna = 1, bi = BI_NOT_DEFINED, chan = -1, bts_scan = 0;
-	unsigned int subdev = 1;
+	char *subdev = "B:0";
 	long int fpga_master_clock_freq = 0;
 	bool external_ref = false;
 	float gain = 0.45;
@@ -132,19 +132,7 @@ int main(int argc, char **argv) {
 
 			case 'R':
 				errno = 0;
-				subdev = strtoul(optarg, &endptr, 0);
-				if((!errno) && (endptr != optarg))
-					break;
-				if(tolower(*optarg) == 'a') {
-					subdev = 0;
-				} else if(tolower(*optarg) == 'b') {
-					subdev = 1;
-				} else {
-					fprintf(stderr, "error: bad side: "
-					   "``%s''\n",
-					   optarg);
-					usage(argv[0]);
-				}
+				subdev = optarg;
 				break;
 
 			case 'A':
@@ -239,7 +227,7 @@ int main(int argc, char **argv) {
 #endif
 		printf("debug: FPGA Master Clock Freq:\t%li\n", fpga_master_clock_freq);
 		printf("debug: External Reference    :\t%s\n", external_ref? "Yes" : "No");
-		printf("debug: RX Subdev Spec        :\t%s\n", subdev? "B" : "A");
+		printf("debug: RX Subdev Spec        :\t%s\n", subdev? subdev : "");
 		printf("debug: Antenna               :\t%s\n", antenna? "RX2" : "TX/RX");
 		printf("debug: Gain                  :\t%f\n", gain);
 	}
