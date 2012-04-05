@@ -80,7 +80,7 @@ void usage(char *prog) {
 	printf("\t-f\tfrequency of nearby GSM base station\n");
 	printf("\t-c\tchannel of nearby GSM base station\n");
 	printf("\t-b\tband indicator (GSM850, GSM900, EGSM, DCS, PCS)\n");
-	printf("\t-R\tside A (0) or B (1), defaults to B\n");
+	printf("\t-R\tRX subdev spec\n");
 	printf("\t-A\tantenna TX/RX (0) or RX2 (1), defaults to RX2\n");
 	printf("\t-g\tgain as %% of range, defaults to 45%%\n");
 	printf("\t-F\tFPGA master clock frequency, defaults to device default\n");
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 
 	char *endptr;
 	int c, antenna = 1, bi = BI_NOT_DEFINED, chan = -1, bts_scan = 0;
-	char *subdev = "B:0";
+	char *subdev = NULL;
 	long int fpga_master_clock_freq = 0;
 	bool external_ref = false;
 	float gain = 0.45;

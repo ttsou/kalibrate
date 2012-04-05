@@ -156,7 +156,8 @@ int usrp_source::open(char *subdev) {
 			return -1;
 		}
 
-		m_dev->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(subdev));
+		if (subdev)
+			m_dev->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(subdev));
 
 		if (m_fpga_master_clock_freq > 0)
 			m_dev->set_master_clock_rate(m_fpga_master_clock_freq);
