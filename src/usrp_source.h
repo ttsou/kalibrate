@@ -82,4 +82,6 @@ private:
 	static const unsigned int	FLUSH_COUNT	= 10;
 	static const unsigned int	CB_LEN		= (1 << 20);
 	static const int		NCHAN		= 1;
+
+	bool check_rx_err(uhd::rx_metadata_t *md);
 };

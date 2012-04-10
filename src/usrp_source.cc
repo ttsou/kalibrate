@@ -227,7 +227,27 @@ std::string handle_rx_err(uhd::rx_metadata_t metadata, bool &overrun) {
 		ost << "unknown error " << metadata.error_code;
 	}
 
+	ost << std::endl;
+
 	return ost.str();
+}
+
+bool usrp_source::check_rx_err(uhd::rx_metadata_t *md)
+{
+	short ubuf[m_recv_samples_per_packet * 2];
+
+	pthread_mutex_lock(&m_u_mutex);
+	size_t samples_read = m_rx_stream->recv((void*)ubuf,
+					m_recv_samples_per_packet,
+					*md,
+					0.1,
+					uhd::device::RECV_MODE_ONE_PACKET);
+	pthread_mutex_unlock(&m_u_mutex);
+
+	if (md->error_code == uhd::rx_metadata_t::ERROR_CODE_NONE)
+		return false;
+
+	return true;
 }
 
 int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
@@ -262,6 +282,13 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 		pthread_mutex_unlock(&m_u_mutex);
 
 		if (samples_read < m_recv_samples_per_packet) {
+			if (metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_NONE) {
+				if (!check_rx_err(&metadata)) {
+					fprintf(stderr, "error: short packet\n");
+					continue;
+				}
+			}
+
 			std::string err_str = handle_rx_err(metadata, overrun_pkt);
 			if (overrun_pkt) {
 				overrun_cnt++;
