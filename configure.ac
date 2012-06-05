@@ -26,14 +26,7 @@ PKG_CHECK_MODULES(FFTW3, fftw3 >= 3.0)
 AC_SUBST(FFTW3_LIBS)
 AC_SUBST(FFTW3_CFLAGS)
 
-PKG_CHECK_MODULES(UHD, uhd)
-AC_SUBST(UHD_LIBS)
-AC_SUBST(UHD_CFLAGS)
-
-PKG_CHECK_EXISTS(uhd >= 003.004.000, uhd_3_4_x=yes, uhd_3_4_x=no)
-if test "x$uhd_3_4_x" = "xyes"; then
-	AC_DEFINE(UHD_3_4_X, 1, Define to 1 if you have UHD >= 003.004.000)
-fi
+PKG_CHECK_MODULES(UHD, uhd >= 003.004.000)
 
 # OSX doesn't support System V shared memory
 AC_CANONICAL_HOST

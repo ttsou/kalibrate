@@ -61,9 +61,7 @@ public:
 
 private:
 	uhd::usrp::multi_usrp::sptr	m_dev;
-#ifdef UHD_3_4_X
 	uhd::rx_streamer::sptr		m_rx_stream;
-#endif
 
 	float				m_sample_rate;
 	float				m_desired_sample_rate;
