@@ -27,17 +27,15 @@
 
 #include "config.h"
 
-#include <uhd/usrp/multi_usrp.hpp>
-
 #include "usrp_complex.h"
 #include "circular_buffer.h"
-
+#include <vector>
 
 class usrp_source {
 public:
 	usrp_source(float sample_rate,
 		long int fpga_master_clock_freq = 100000000,
-		bool external_ref = false);
+		bool external_ref = false, char *filename = NULL);
 
 	~usrp_source();
 
@@ -60,12 +58,8 @@ public:
 	float sample_rate();
 
 private:
-	uhd::usrp::multi_usrp::sptr	m_dev;
-	uhd::rx_streamer::sptr		m_rx_stream;
-
 	float				m_sample_rate;
 	float				m_desired_sample_rate;
-	bool				m_external_ref;
 	unsigned int			m_recv_samples_per_packet;
 	long int			m_fpga_master_clock_freq;
 
@@ -80,6 +74,4 @@ private:
 	static const unsigned int	FLUSH_COUNT	= 10;
 	static const unsigned int	CB_LEN		= (1 << 20);
 	static const int		NCHAN		= 1;
-
-	bool check_rx_err(uhd::rx_metadata_t *md);
 };

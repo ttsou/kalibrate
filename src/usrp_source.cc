@@ -38,20 +38,40 @@
 
 #include "usrp_source.h"
 
-extern int g_verbosity;
+static bool loop_file = false;
 
+extern int g_verbosity;
+FILE *fp = NULL;
+char *g_filename = NULL;
+
+bool init_file()
+{
+	fprintf(stdout, "Opening file %s\n", g_filename);
+	fp = fopen(g_filename, "r");
+	if (!fp) {
+		fprintf(stderr, "Could not open file %s\n", g_filename);
+		return false;
+	}
+
+	return true;
+}
+
+bool reopen_file()
+{
+	fclose(fp);
+	fp = fopen(g_filename, "r");
+}
 
 usrp_source::usrp_source(float sample_rate,
 			long int fpga_master_clock_freq,
-			bool external_ref) {
+			bool external_ref, char *filename) {
 
 	m_desired_sample_rate = sample_rate;
 	m_fpga_master_clock_freq = fpga_master_clock_freq;
-	m_external_ref = external_ref;
-	m_sample_rate = 0.0;
-	m_dev.reset();
+	m_sample_rate = sample_rate;
 	m_cb = new circular_buffer(CB_LEN, sizeof(complex), 0);
-
+	m_recv_samples_per_packet = 512;
+	g_filename = filename;
 	pthread_mutex_init(&m_u_mutex, 0);
 }
 
@@ -66,23 +86,11 @@ usrp_source::~usrp_source() {
 
 void usrp_source::stop() {
 
-	pthread_mutex_lock(&m_u_mutex);
-	if(m_dev) {
-		uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS);
-		m_dev->issue_stream_cmd(cmd);
-	}
-	pthread_mutex_unlock(&m_u_mutex);
 }
 
 
 void usrp_source::start() {
 
-	pthread_mutex_lock(&m_u_mutex);
-	if(m_dev) {
-		uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
-		m_dev->issue_stream_cmd(cmd);
-	}
-	pthread_mutex_unlock(&m_u_mutex);
 }
 
 
@@ -94,48 +102,29 @@ float usrp_source::sample_rate() {
 
 int usrp_source::tune(double freq) {
 
-	double actual_freq;
-
-	pthread_mutex_lock(&m_u_mutex);
-	m_dev->set_rx_freq(freq);
-	actual_freq = m_dev->get_rx_freq();
-	pthread_mutex_unlock(&m_u_mutex);
-
-	return actual_freq;
+	return freq;
 }
 
 
-void usrp_source::set_antenna(const std::string antenna) {
+void usrp_source::set_antenna(const std::string) {
 
-	m_dev->set_rx_antenna(antenna);
 }
 
 
-void usrp_source::set_antenna(int antenna) {
+void usrp_source::set_antenna(int) {
 
-	std::vector<std::string> antennas = get_antennas();
-	if (antenna < antennas.size())
-		set_antenna(antennas[antenna]);
-	else 
-		fprintf(stderr, "error: requested invalid antenna\n");
 }
 
 
 std::vector<std::string> usrp_source::get_antennas() {
 
-	return m_dev->get_rx_antennas();
+	std::vector<std::string> vec;
+
+	return vec;
 }
 
 
-bool usrp_source::set_gain(float gain) {
-
-	uhd::gain_range_t gain_range = m_dev->get_rx_gain_range();
-	float min = gain_range.start(), max = gain_range.stop();
-
-	if((gain < 0.0) || (1.0 < gain))
-		return false;
-
-	m_dev->set_rx_gain(min + gain * (max - min));
+bool usrp_source::set_gain(float) {
 
 	return true;
 }
@@ -144,104 +133,36 @@ bool usrp_source::set_gain(float gain) {
 /*
  * open() should be called before multiple threads access usrp_source.
  */
-int usrp_source::open(char *subdev) {
-
-	if(!m_dev) {
-		char *addr = std::getenv("KAL_DEVICE");
-		if (addr==NULL)
-			addr = "";
-		uhd::device_addr_t dev_addr(addr);
-		if (!(m_dev = uhd::usrp::multi_usrp::make(dev_addr))) {
-			fprintf(stderr, "error: multi_usrp::make: failed!\n");
-			return -1;
-		}
-
-		if (subdev)
-			m_dev->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(subdev));
-
-		if (m_fpga_master_clock_freq > 0)
-			m_dev->set_master_clock_rate(m_fpga_master_clock_freq);
-
-		m_dev->set_rx_rate(m_desired_sample_rate);
-		m_sample_rate = m_dev->get_rx_rate();
-
-		if (m_external_ref)
-			m_dev->set_clock_source("external");
-
-		if(g_verbosity > 1) {
-			fprintf(stderr, "Sample rate: %f\n", m_sample_rate);
-		}
-	}
-
-	set_gain(0.45);
-
-	set_antenna(1);
-
-	m_recv_samples_per_packet =
-		m_dev->get_device()->get_max_recv_samps_per_packet();
-
-	uhd::stream_args_t stream_args("sc16");
-	m_rx_stream = m_dev->get_rx_stream(stream_args);
+int usrp_source::open(char *) {
 
 	return 0;
 }
 
-std::string handle_rx_err(uhd::rx_metadata_t metadata, bool &overrun) {
-
-	overrun = false;
-	std::ostringstream ost("error: ");
-
-	switch (metadata.error_code) {
-	case uhd::rx_metadata_t::ERROR_CODE_NONE:
-		ost << "no error";
-		break;
-	case uhd::rx_metadata_t::ERROR_CODE_TIMEOUT:
-		ost << "no packet received, implementation timed-out";
-		break;
-	case uhd::rx_metadata_t::ERROR_CODE_LATE_COMMAND:
-		ost << "a stream command was issued in the past";
-		break;
-	case uhd::rx_metadata_t::ERROR_CODE_BROKEN_CHAIN:
-		ost << "expected another stream command";
-		break;
-	case uhd::rx_metadata_t::ERROR_CODE_OVERFLOW:
-		overrun = true;
-		ost << "an internal receive buffer has filled";
-		break;
-	case uhd::rx_metadata_t::ERROR_CODE_BAD_PACKET:
-		ost << "the packet could not be parsed";
-		break;
-	default:
-		ost << "unknown error " << metadata.error_code;
-	}
-
-	ost << std::endl;
-
-	return ost.str();
-}
-
-bool usrp_source::check_rx_err(uhd::rx_metadata_t *md)
+/*
+ * Fill buffer with file data. Loop at end of file.
+ */
+bool fill_from_file(float *buf, size_t len)
 {
-	short ubuf[m_recv_samples_per_packet * 2];
+	size_t num;
 
-	pthread_mutex_lock(&m_u_mutex);
-	size_t samples_read = m_rx_stream->recv((void*)ubuf,
-					m_recv_samples_per_packet,
-					*md,
-					0.1,
-					uhd::device::RECV_MODE_ONE_PACKET);
-	pthread_mutex_unlock(&m_u_mutex);
-
-	if (md->error_code == uhd::rx_metadata_t::ERROR_CODE_NONE)
+	if (!fp && !init_file())
 		return false;
+
+	num = fread((void *) buf, 2 * sizeof(float), len, fp);
+	if (num != len) {
+		if (loop_file)
+			reopen_file();
+		else
+			return false;
+	}
 
 	return true;
 }
 
 int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 
-	unsigned char ubuf[m_recv_samples_per_packet * 2 * sizeof(short)];
-	short *s = (short *)ubuf;
+	unsigned char ubuf[m_recv_samples_per_packet * 2 * sizeof(float)];
+	float *s = (float *)ubuf;
 	unsigned int i, j, space, overrun_cnt;
 	complex *c;
 	bool overrun_pkt;
@@ -251,32 +172,14 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 	while ((m_cb->data_available() < num_samples)
 			&& m_cb->space_available() > 0) {
 
-		uhd::rx_metadata_t metadata;
-
 		pthread_mutex_lock(&m_u_mutex);
-		size_t samples_read = m_rx_stream->recv((void*)ubuf,
-					m_recv_samples_per_packet,
-					metadata,
-					0.1,
-					uhd::device::RECV_MODE_ONE_PACKET);
-		pthread_mutex_unlock(&m_u_mutex);
 
-		if (samples_read < m_recv_samples_per_packet) {
-			if (metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_NONE) {
-				if (!check_rx_err(&metadata)) {
-					fprintf(stderr, "error: short packet\n");
-					continue;
-				}
-			}
-
-			std::string err_str = handle_rx_err(metadata, overrun_pkt);
-			if (overrun_pkt) {
-				overrun_cnt++;
-			} else {
-				fprintf(stderr, err_str.c_str());
-				return -1;
-			}
+		if (!fill_from_file(s, m_recv_samples_per_packet)) {
+			fprintf(stderr, "End of file or error\n");
+			return -1;
 		}
+
+		pthread_mutex_unlock(&m_u_mutex);
 
 		// write complex<short> input to complex<float> output
 		c = (complex *)m_cb->poke(&space);

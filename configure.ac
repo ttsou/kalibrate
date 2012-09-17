@@ -26,8 +26,6 @@ PKG_CHECK_MODULES(FFTW3, fftw3 >= 3.0)
 AC_SUBST(FFTW3_LIBS)
 AC_SUBST(FFTW3_CFLAGS)
 
-PKG_CHECK_MODULES(UHD, uhd >= 003.004.000)
-
 # OSX doesn't support System V shared memory
 AC_CANONICAL_HOST
 case "$host_os" in

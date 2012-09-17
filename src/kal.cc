@@ -60,7 +60,7 @@
 #include "version.h"
 
 static const double GSM_RATE = 1625000.0 / 6.0;
-
+static const double DEV_RATE = 400e3;
 
 int g_verbosity = 0;
 int g_debug = 0;
@@ -87,6 +87,7 @@ void usage(char *prog) {
 	printf("\t-x\tenable external 10MHz reference input\n");
 	printf("\t-v\tverbose\n");
 	printf("\t-D\tenable debug messages\n");
+	printf("\t-n\tcapture filename\n");
 	printf("\t-h\thelp\n");
 	exit(-1);
 }
@@ -102,8 +103,9 @@ int main(int argc, char **argv) {
 	float gain = 0.45;
 	double freq = -1.0, fd;
 	usrp_source *u;
+	char *filename = NULL;
 
-	while((c = getopt(argc, argv, "f:c:s:b:R:A:g:F:xvDh?")) != EOF) {
+	while((c = getopt(argc, argv, "f:c:s:b:R:A:g:F:n:xvDh?")) != EOF) {
 		switch(c) {
 			case 'f':
 				freq = strtod(optarg, 0);
@@ -171,6 +173,10 @@ int main(int argc, char **argv) {
 				}
 				break;
 
+			case 'n':
+				filename = optarg;
+				break;
+
 			case 'x':
 				external_ref = true;
 				break;
@@ -215,6 +221,11 @@ int main(int argc, char **argv) {
 		chan = freq_to_arfcn(freq, &bi);
 	}
 
+	if (!filename) {
+		fprintf(stderr, "error: must specify capture file name\n");
+		usage(argv[0]);
+	}
+
 	// sanity check clock
 	if((fpga_master_clock_freq) && fpga_master_clock_freq < 48000000) {
 		fprintf(stderr, "error: FPGA master clock too slow: %li\n", fpga_master_clock_freq);
@@ -233,7 +244,7 @@ int main(int argc, char **argv) {
 	}
 
 	// let the device decide on the decimation
-	u = new usrp_source(GSM_RATE, fpga_master_clock_freq, external_ref);
+	u = new usrp_source(DEV_RATE, fpga_master_clock_freq, external_ref, filename);
 	if(!u) {
 		fprintf(stderr, "error: usrp_source\n");
 		return -1;
