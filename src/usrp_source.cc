@@ -42,8 +42,8 @@ extern int g_verbosity;
 
 
 usrp_source::usrp_source(float sample_rate,
-			long int fpga_master_clock_freq,
-			bool external_ref) {
+			 double fpga_master_clock_freq,
+			 bool external_ref) {
 
 	m_desired_sample_rate = sample_rate;
 	m_fpga_master_clock_freq = fpga_master_clock_freq;
@@ -159,7 +159,7 @@ int usrp_source::open(char *subdev) {
 		if (subdev)
 			m_dev->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(subdev));
 
-		if (m_fpga_master_clock_freq > 0)
+		if (m_fpga_master_clock_freq > 0.0)
 			m_dev->set_master_clock_rate(m_fpga_master_clock_freq);
 
 		m_dev->set_rx_rate(m_desired_sample_rate);

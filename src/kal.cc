@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 	char *endptr;
 	int c, antenna = 1, bi = BI_NOT_DEFINED, chan = -1, bts_scan = 0;
 	char *subdev = NULL;
-	long int fpga_master_clock_freq = 0;
+	double fpga_master_clock_freq = 0.0;
 	bool external_ref = false;
 	float gain = 0.45;
 	double freq = -1.0, fd;
@@ -161,14 +161,7 @@ int main(int argc, char **argv) {
 				break;
 
 			case 'F':
-				fpga_master_clock_freq = strtol(optarg, 0, 0);
-				if(!fpga_master_clock_freq)
-					fpga_master_clock_freq = (long int)strtod(optarg, 0); 
-
-				// was answer in MHz?
-				if(fpga_master_clock_freq < 1000) {
-					fpga_master_clock_freq *= 1000000;
-				}
+				fpga_master_clock_freq = atof(optarg);
 				break;
 
 			case 'x':
@@ -215,17 +208,11 @@ int main(int argc, char **argv) {
 		chan = freq_to_arfcn(freq, &bi);
 	}
 
-	// sanity check clock
-	if((fpga_master_clock_freq) && fpga_master_clock_freq < 48000000) {
-		fprintf(stderr, "error: FPGA master clock too slow: %li\n", fpga_master_clock_freq);
-		usage(argv[0]);
-	}
-
 	if(g_debug) {
 #ifdef D_HOST_OSX
 		printf("debug: Mac OS X version\n");
 #endif
-		printf("debug: FPGA Master Clock Freq:\t%li\n", fpga_master_clock_freq);
+		printf("debug: FPGA Master Clock Freq:\t%f\n", fpga_master_clock_freq);
 		printf("debug: External Reference    :\t%s\n", external_ref? "Yes" : "No");
 		printf("debug: RX Subdev Spec        :\t%s\n", subdev? subdev : "");
 		printf("debug: Antenna               :\t%s\n", antenna? "RX2" : "TX/RX");
