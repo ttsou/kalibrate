@@ -316,8 +316,8 @@ float fcch_detector::freq_detect(const complex *s, const unsigned int s_len, flo
 	fftw_execute(m_plan);
 
 	for(i = 0; i < FFT_SIZE; i++) {
-		fft[i].real() = m_out[i][0];
-		fft[i].imag() = m_out[i][1];
+		fft[i].real(m_out[i][0]);
+		fft[i].imag(m_out[i][1]);
 	}
 
 	max_i = peak_detect(fft, FFT_SIZE, &peak, &avg_power);
