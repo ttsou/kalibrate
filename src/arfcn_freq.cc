@@ -170,7 +170,7 @@ int freq_to_arfcn(double freq, int *bi) {
 		return (int)((freq - 1930.2e6) / 0.2e6) + 512;
 	}
 
-	fprintf(stderr, "error: bad frequency: %lf\n", freq);
+	fprintf(stderr, "Notice: Out-of-band GSM frequency: %lf\n", freq);
 	return -1;
 }
 
