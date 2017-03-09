@@ -145,11 +145,13 @@ bool usrp_source::set_gain(float gain) {
  * open() should be called before multiple threads access usrp_source.
  */
 int usrp_source::open(char *subdev) {
+	std::string addr("");
 
 	if(!m_dev) {
-		char *addr = std::getenv("KAL_DEVICE");
-		if (addr==NULL)
-			addr = "";
+		char *env = std::getenv("KAL_DEVICE");
+		if (env)
+			addr = std::string(env);
+
 		uhd::device_addr_t dev_addr(addr);
 		if (!(m_dev = uhd::usrp::multi_usrp::make(dev_addr))) {
 			fprintf(stderr, "error: multi_usrp::make: failed!\n");
@@ -177,11 +179,10 @@ int usrp_source::open(char *subdev) {
 
 	set_antenna(1);
 
-	m_recv_samples_per_packet =
-		m_dev->get_device()->get_max_recv_samps_per_packet();
-
 	uhd::stream_args_t stream_args("sc16");
 	m_rx_stream = m_dev->get_rx_stream(stream_args);
+
+	m_recv_samples_per_packet = m_rx_stream->get_max_num_samps();
 
 	return 0;
 }
@@ -228,8 +229,7 @@ bool usrp_source::check_rx_err(uhd::rx_metadata_t *md)
 	size_t samples_read = m_rx_stream->recv((void*)ubuf,
 					m_recv_samples_per_packet,
 					*md,
-					0.1,
-					uhd::device::RECV_MODE_ONE_PACKET);
+					0.1);
 	pthread_mutex_unlock(&m_u_mutex);
 
 	if (md->error_code == uhd::rx_metadata_t::ERROR_CODE_NONE)
@@ -257,8 +257,7 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 		size_t samples_read = m_rx_stream->recv((void*)ubuf,
 					m_recv_samples_per_packet,
 					metadata,
-					0.1,
-					uhd::device::RECV_MODE_ONE_PACKET);
+					0.1);
 		pthread_mutex_unlock(&m_u_mutex);
 
 		if (samples_read < m_recv_samples_per_packet) {

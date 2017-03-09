@@ -65,7 +65,7 @@ public:
 	unsigned int x_purge(unsigned int);
 
 private:
-	static const double GSM_RATE = 1625000.0 / 6.0;
+	static constexpr double GSM_RATE = 1625000.0 / 6.0;
 	static const unsigned int FFT_SIZE;
 	unsigned int	m_w_len,
 			m_D,
