@@ -41,7 +41,7 @@
 extern int g_verbosity;
 
 
-usrp_source::usrp_source(float sample_rate,
+usrp_source::usrp_source(double sample_rate,
 			 double fpga_master_clock_freq,
 			 bool external_ref) {
 
@@ -86,7 +86,7 @@ void usrp_source::start() {
 }
 
 
-float usrp_source::sample_rate() {
+double usrp_source::sample_rate() {
 
 	return m_sample_rate;
 }

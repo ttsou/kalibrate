@@ -35,7 +35,7 @@
 
 class usrp_source {
 public:
-	usrp_source(float sample_rate,
+	usrp_source(double sample_rate,
 		    double fpga_master_clock_freq = 0.0,
 		    bool external_ref = false);
 
@@ -57,14 +57,14 @@ public:
 	int flush(unsigned int flush_count = FLUSH_COUNT);
 	circular_buffer *get_buffer();
 
-	float sample_rate();
+	double sample_rate();
 
 private:
 	uhd::usrp::multi_usrp::sptr	m_dev;
 	uhd::rx_streamer::sptr		m_rx_stream;
 
-	float				m_sample_rate;
-	float				m_desired_sample_rate;
+	double				m_sample_rate;
+	double				m_desired_sample_rate;
 	bool				m_external_ref;
 	unsigned int			m_recv_samples_per_packet;
 	double				m_fpga_master_clock_freq;
