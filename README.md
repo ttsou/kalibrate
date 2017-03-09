@@ -8,20 +8,17 @@ such as inconsistent network detection by the handset, handover failure, and
 poor data and voice call performance.
 
 Original version of kalibrate (for use with USRP1):
-  * http://ttsou.github.com/kalibrate-uhd/kal-v0.4.1.tar.bz2
+  * http://ttsou.github.com/kalibrate/kal-v0.4.1.tar.bz2
 
 Universal Hardware Driver (UHD):
   * http://uhd.ettus.com
 
-OpenBTS Clock Wiki:
-  * http://gnuradio.org/redmine/projects/gnuradio/wiki/OpenBTSClocks
-
 Release Notes
 
 The USRP2/N200/N210 is clocked at 100MHz and does not output fractional sample rates.
+The hardware sample rate warning can be safely ignored.
 
 For USRP1, the original, non-UHD version of kalibrate is recommended.
-Download
 
 Build
 =====
