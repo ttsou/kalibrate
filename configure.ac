@@ -4,6 +4,9 @@ AC_CONFIG_SRCDIR([src/fcch_detector.cc])
 AM_INIT_AUTOMAKE([-Wall -Werror])
 AC_CONFIG_HEADERS([config.h])
 
+dnl Linux kernel KBuild style compile messages
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
