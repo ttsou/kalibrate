@@ -273,7 +273,7 @@ int usrp_source::fill(unsigned int num_samples, unsigned int *overrun) {
 			if (overrun_pkt) {
 				overrun_cnt++;
 			} else {
-				fprintf(stderr, err_str.c_str());
+				fprintf(stderr, "%s", err_str.c_str());
 				return -1;
 			}
 		}
