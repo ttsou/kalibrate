@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 	char *endptr;
 	int c, antenna = 1, bi = BI_NOT_DEFINED, chan = -1, bts_scan = 0;
 	char *subdev = NULL;
-	double fpga_master_clock_freq = 0.0;
+	double fpga_master_clock_freq = 52e6;
 	bool external_ref = false;
 	float gain = 0.45;
 	double freq = -1.0, fd;
