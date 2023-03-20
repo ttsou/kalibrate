@@ -49,6 +49,7 @@ usrp_source::usrp_source(double sample_rate,
 	m_fpga_master_clock_freq = fpga_master_clock_freq;
 	m_external_ref = external_ref;
 	m_sample_rate = 0.0;
+	m_freq_corr = 0;
 	m_dev.reset();
 	m_cb = new circular_buffer(CB_LEN, sizeof(complex), 0);
 
@@ -94,14 +95,12 @@ double usrp_source::sample_rate() {
 
 int usrp_source::tune(double freq) {
 
-	double actual_freq;
-
 	pthread_mutex_lock(&m_u_mutex);
 	m_dev->set_rx_freq(freq);
-	actual_freq = m_dev->get_rx_freq();
+	m_center_freq = m_dev->get_rx_freq();
 	pthread_mutex_unlock(&m_u_mutex);
 
-	return actual_freq;
+	return m_center_freq;
 }
 
 
