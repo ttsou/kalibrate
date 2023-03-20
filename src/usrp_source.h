@@ -25,8 +25,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-
 #include <uhd/usrp/multi_usrp.hpp>
 
 #include "usrp_complex.h"
@@ -58,6 +56,7 @@ public:
 	circular_buffer *get_buffer();
 
 	double sample_rate();
+	double get_freq() { return m_center_freq; }
 
 private:
 	uhd::usrp::multi_usrp::sptr	m_dev;
@@ -65,6 +64,8 @@ private:
 
 	double				m_sample_rate;
 	double				m_desired_sample_rate;
+	double              m_center_freq;
+	double              m_freq_corr;
 	bool				m_external_ref;
 	unsigned int			m_recv_samples_per_packet;
 	double				m_fpga_master_clock_freq;
