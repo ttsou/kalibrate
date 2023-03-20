@@ -46,6 +46,7 @@ int offset_detect(usrp_source *u) {
 	unsigned int s_len, b_len, consumed, count;
 	float offset = 0.0, min = 0.0, max = 0.0, avg_offset = 0.0,
 	   stddev = 0.0, sps, offsets[AVG_COUNT];
+	double total_ppm;
 	complex *cbuf;
 	fcch_detector *l;
 	circular_buffer *cb;
@@ -115,6 +116,8 @@ int offset_detect(usrp_source *u) {
 	printf("average\t\t[min, max]\t(range, stddev)\n");
 	display_freq(avg_offset);
 	printf("\t\t[%d, %d]\t(%d, %f)\n", (int)round(min), (int)round(max), (int)round(max - min), stddev);
+	total_ppm = ((avg_offset) / u->get_freq()) * 1000000;
+	printf("average absolute error: %.3f ppm\n", total_ppm);
 	printf("overruns: %u\n", overruns);
 	printf("not found: %u\n", notfound);
 
